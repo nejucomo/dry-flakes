@@ -5,7 +5,7 @@
   flake-parts,
   crane,
   rust-overlay,
-}:
+}@inputs:
 
 let
   systemsDefault = import systems;
