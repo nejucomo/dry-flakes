@@ -40,7 +40,6 @@ let
           packages.default = package;
           devShells.default = craneLib.devShell {
             checks = self'.checks;
-            packages = [ toolchain ];
           };
           checks = {
             default = package;
