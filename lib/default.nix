@@ -30,25 +30,27 @@ let
       '';
     };
 
-in
-rec {
-  mkFlakePartsModule = project: {
-    systems = project.systems or systemsDefault;
+  mkFlakePartsModule = {
+    forCargoWorkspace = { systems, src }: { perSystem = { pkgs, inputs', ... }: (
+      # TODO: use `rust-overlay` to select toolchain from `src + "/rust-toolchain.toml", then wrap the whole build with `crane`.
 
-    perSystem = { system, ... }: mkPerSystemOutputs project system;
+      ); };
   };
 
-  mkFlakeUtilsOutputs =
-    project: inputs.flake-utils.lib.eachDefaultSystem (system: mkPerSystemOutputs project system);
-
+in
+# lib interface:
+{
   mkFlakeOutputs =
-    project:
-    let
-      systems = project.systems or systemsDefault;
-      perSystem = system: mkPerSystemOutputs project system;
-    in
     {
-      packages = forSystems systems (system: (perSystem system).packages);
-      checks = forSystems systems (system: (perSystem system).checks);
-    };
+      cargoWorkspace,
+      systems ? systemsDefault,
+    }:
+    (flake-parts.lib.mkFlake { inputs = inputs; } {
+      imports = [
+        (mkFlakePartsModule.forCargoWorkspace {
+          inherit systems;
+          src = cargoWorkspace;
+        })
+      ];
+    });
 }
