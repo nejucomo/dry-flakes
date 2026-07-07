@@ -10,28 +10,6 @@
 let
   systemsDefault = import systems;
 
-  mkPerSystemOutputs =
-    project: system:
-    let
-      pkgs = mkPkgs project system;
-    in
-    {
-      packages.default = pkgs.stdenvNoCC.mkDerivation {
-        pname = project.pname;
-        version = project.version;
-        src = project.src;
-
-        installPhase = ''
-          mkdir -p $out
-          cp -r . $out/src
-        '';
-      };
-
-      checks.default = pkgs.runCommand "${project.pname}-check" { } ''
-        echo ok > $out
-      '';
-    };
-
   mkFlakePartsModule = {
     forCargoWorkspace = { systems, src }: {
       inherit systems;
