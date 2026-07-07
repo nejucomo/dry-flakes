@@ -39,10 +39,10 @@ let
         inherit systems;
 
         perSystem =
-          { pkgs, ... }:
+          { system, ... }:
           let
             pkgsWithRust = import nixpkgs {
-              system = pkgs.system;
+              inherit system;
               overlays = [ rust-overlay.overlays.default ];
             };
             toolchain = pkgsWithRust.rust-bin.fromRustupToolchainFile (src + "/rust-toolchain.toml");
