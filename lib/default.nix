@@ -3,6 +3,8 @@
   nixpkgs,
   systems,
   flake-parts,
+  crane,
+  rust-overlay,
 }:
 
 let
@@ -31,10 +33,46 @@ let
     };
 
   mkFlakePartsModule = {
-    forCargoWorkspace = { systems, src }: { perSystem = { pkgs, inputs', ... }: (
-      # TODO: use `rust-overlay` to select toolchain from `src + "/rust-toolchain.toml", then wrap the whole build with `crane`.
+    forCargoWorkspace =
+      { systems, src }:
+      {
+        inherit systems;
 
-      ); };
+        perSystem =
+          { pkgs, ... }:
+          let
+            pkgsWithRust = import nixpkgs {
+              system = pkgs.system;
+              overlays = [ rust-overlay.overlays.default ];
+            };
+            toolchain = pkgsWithRust.rust-bin.fromRustupToolchainFile (src + "/rust-toolchain.toml");
+            craneLib = (crane.mkLib pkgsWithRust).overrideToolchain toolchain;
+            commonArgs = {
+              src = craneLib.cleanCargoSource src;
+              strictDeps = true;
+            };
+            cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+            package = craneLib.buildPackage (
+              commonArgs
+              // {
+                inherit cargoArtifacts;
+              }
+            );
+          in
+          {
+            packages.default = package;
+            checks = {
+              default = package;
+              clippy = craneLib.cargoClippy (
+                commonArgs
+                // {
+                  inherit cargoArtifacts;
+                  cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+                }
+              );
+            };
+          };
+      };
   };
 
 in
