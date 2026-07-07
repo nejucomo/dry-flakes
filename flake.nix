@@ -19,7 +19,8 @@
     inputs:
     let
       lib = import ./lib inputs;
-      cargoWorkspaceChecks = (lib.mkFlakeOutputs { cargoWorkspace = ./test/fixtures/cargo-workspace; }).checks;
+      cargoWorkspaceChecks =
+        (lib.mkFlakeOutputs { cargoWorkspace = ./test/fixtures/cargo-workspace; }).checks;
     in
     {
       inherit lib;
