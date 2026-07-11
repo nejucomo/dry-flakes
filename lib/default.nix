@@ -25,6 +25,7 @@ let
             extensions = [
               "clippy"
               "rust-analyzer"
+              "rust-src"
               "rustfmt"
             ];
           };
